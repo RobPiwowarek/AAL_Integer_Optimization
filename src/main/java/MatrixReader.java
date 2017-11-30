@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
 
 public class MatrixReader {
 
-    public Matrix readMatrixFromFile(String fileName) {
+    public static Matrix readMatrixFromFile(String fileName) {
         int x = 3, y = 3;
         int rowsIndex = 0;
 
