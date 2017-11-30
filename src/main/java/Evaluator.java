@@ -24,4 +24,5 @@ public class Evaluator {
         newMatrix.set(0, position, Math.floor(x.get(0, position)));
         return newMatrix;
     }
+
 }

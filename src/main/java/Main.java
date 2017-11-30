@@ -19,35 +19,45 @@ public class Main {
 
         Matrix floorFixed = Evaluator.fixToFloorInteger(continuousMinimum, 0);
         Matrix ceilFixed = Evaluator.fixToCeilInteger(continuousMinimum, 0);
-        Matrix x;
+        Matrix x = continuousMinimum;
 
-        double lowerBound = 0.0;
-        int d = 1;
+        double lowerBound = Evaluator.evaluateExpression(continuousMinimum, A, B);
+        double upperBound = Evaluator.evaluateExpression(fixToFloorInteger(continuousMinimum), A, B);
+        int d = 0;
+        final int n = continuousMinimum.getColumnDimension();
         double value = 0.0;
         Matrix min;
 
         // warunek wyjscia?
         while (true){
+             Matrix fixedSolution = Evaluator.fixToCeilInteger(x, d); // to powinno sie dynamicznie zmieniac a nie sam ceil
 
-            // todo: optimization
-            if (Evaluator.evaluateExpression(floorFixed, A, B) < Evaluator.evaluateExpression(ceilFixed, A, B)){
-                x = floorFixed;
-            }
-            else {
-                x = ceilFixed;
-            }
+             double fixedSolutionValue = Evaluator.evaluateExpression(fixedSolution, A, B);
 
-            value = Evaluator.evaluateExpression(x, A, B);
+             if (fixedSolutionValue < upperBound) {
+                 // rozwijamy tzn?
+                 // przechodzimy do drugiej wspolrzednej etc.
+                 if (d < n)
+                     ++d;
 
-            if (value < lowerBound){
-                lowerBound = value;
-            }
-
-            ++d;
+             }
+             else {
+                 // to nie rozwijamy dalej tego wezla
+                 if (d > 0)
+                     --d;
+             }
         }
     }
-}
 
+    public static Matrix fixToFloorInteger(Matrix x){
+        Matrix newMatrix = new Matrix(x.getArray());
+        for(int i = 0; i < x.getColumnDimension(); ++i){
+            newMatrix.set(0, i, Math.floor(x.get(0, i)));
+        }
+
+        return newMatrix;
+    }
+}
 
 
 
