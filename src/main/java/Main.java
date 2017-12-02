@@ -21,6 +21,8 @@ public class Main {
         Matrix ceilFixed = Evaluator.fixToCeilInteger(continuousMinimum, 0);
         Matrix x = continuousMinimum;
 
+        // todo: czy minimum juz jest calkowitoliczbowe?
+
         double lowerBound = Evaluator.evaluateExpression(continuousMinimum, A, B);
         double upperBound = Evaluator.evaluateExpression(fixToFloorInteger(continuousMinimum), A, B);
         int d = 0;
@@ -30,7 +32,7 @@ public class Main {
 
         // warunek wyjscia?
         while (true){
-             Matrix fixedSolution = Evaluator.fixToCeilInteger(x, d); // to powinno sie dynamicznie zmieniac a nie sam ceil
+             Matrix fixedSolution = Evaluator.fixToCeilInteger(x, d); // to powinno sie dynamicznie zmieniac a nie sam ceil tzn ceil, floor, ceil+1, floor+1 etc.
 
              double fixedSolutionValue = Evaluator.evaluateExpression(fixedSolution, A, B);
 
@@ -40,6 +42,7 @@ public class Main {
                  if (d < n)
                      ++d;
 
+                 x = fixedSolution;
              }
              else {
                  // to nie rozwijamy dalej tego wezla
@@ -49,7 +52,7 @@ public class Main {
         }
     }
 
-    public static Matrix fixToFloorInteger(Matrix x){
+    private static Matrix fixToFloorInteger(Matrix x){
         Matrix newMatrix = new Matrix(x.getArray());
         for(int i = 0; i < x.getColumnDimension(); ++i){
             newMatrix.set(0, i, Math.floor(x.get(0, i)));
