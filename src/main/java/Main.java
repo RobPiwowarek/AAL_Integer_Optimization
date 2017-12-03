@@ -1,12 +1,11 @@
 import Jama.Matrix;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         Matrix A = MatrixReader.readMatrixFromFile("A.txt");
         Matrix B = MatrixReader.readMatrixFromFile("B.txt");

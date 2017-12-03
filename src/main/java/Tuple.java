@@ -9,17 +9,7 @@ public class Tuple {
         this.value = value;
     }
 
-    public static Comparator<Tuple> descending = new Comparator<Tuple>() {
-        @Override
-        public int compare(Tuple o1, Tuple o2) {
-            return Double.compare(o1.value, o2.value);
-        }
-    };
+    public static Comparator<Tuple> descending = Comparator.comparingDouble(o -> o.value);
 
-    public static Comparator<Tuple> ascending = new Comparator<Tuple>() {
-        @Override
-        public int compare(Tuple o1, Tuple o2) {
-            return Double.compare(o2.value, o1.value);
-        }
-    };
+    public static Comparator<Tuple> ascending = (o1, o2) -> Double.compare(o2.value, o1.value);
 }
