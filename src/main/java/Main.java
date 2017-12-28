@@ -11,6 +11,9 @@ public class Main {
         Matrix A = MatrixReader.readMatrixFromFile("A.txt");
         Matrix B = MatrixReader.readMatrixFromFile("B.txt");
 
+        A.print(3, 6);
+        B.print(3, 6);
+
         if (!JamaUtils.isSymmetric(A)) {
             JamaUtils.makeMatrixSymmetric(A, JamaUtils.Function.MEAN);
         }
@@ -34,39 +37,49 @@ public class Main {
 
         double lowerBound = Double.MAX_VALUE;
 
-        for (int d = 0; d < n; ++d){
-            fixAtPosition(x, d, numberOfCalls);
 
-            double currentLowerBound = Evaluator.evaluateExpression(x, A, B);
+        A.print(3, 6);
+        continuousMinimum.print(3, 6);
+        System.out.println(n);
 
-            //lowerBound = lowerBound < currentLowerBound ? lowerBound : currentLowerBound;
+        fixToFloorInteger(continuousMinimum).print(3, 6);
 
-            if (lowerBound <= currentLowerBound){
-                // fuck go back
-                 --d;
+        return;
 
-                 //
-
-                 --d;
-            }
-            else {
-                lowerBound = currentLowerBound;
-            }
-
-            // fix x at d
-            // calc lower bound by calculating f(so far fixed x)
-            // check if lowerbound > current minimal lower bound
-            // yes -> dont go that way - step back one step and calc one more point (3 points)
-            //                         - go to the point which has lowest lower bound
-            // no -> go that way, ++d repeat algorithm
-
-
-
-
-        }
-
-        minimum = x;
-    }
+//
+//
+//        for (int d = 0; d < n; ++d){
+//            fixAtPosition(x, d, numberOfCalls);
+//
+//            double currentLowerBound = Evaluator.evaluateExpression(x, A, B);
+//
+//            //lowerBound = lowerBound < currentLowerBound ? lowerBound : currentLowerBound;
+//
+//            if (lowerBound <= currentLowerBound){
+//                // fuck go back
+//                 --d;
+//
+//                 //
+//
+//                 --d;
+//            }
+//            else {
+//                lowerBound = currentLowerBound;
+//            }
+//
+//            // fix x at d
+//            // calc lower bound by calculating f(so far fixed x)
+//            // check if lowerbound > current minimal lower bound
+//            // yes -> dont go that way - step back one step and calc one more point (3 points)
+//            //                         - go to the point which has lowest lower bound
+//            // no -> go that way, ++d repeat algorithm
+//
+//
+//
+//        }
+//
+//        minimum = x;
+ }
 
     private static void fixAtPosition(Matrix m, int d, Vector<Integer> calls){
         int numberOfCalls = calls.get(d);
@@ -79,8 +92,8 @@ public class Main {
     }
 
     private static boolean isSolutionInteger(Matrix m) {
-        for (int i = 0; i < m.getColumnDimension(); ++i) {
-            if (m.getArray()[0][i] != Math.round(m.getArray()[0][i]))
+        for (int i = 0; i < m.getRowDimension(); ++i) {
+            if (m.getArray()[i][0] != Math.round(m.getArray()[i][0]))
                 return false;
         }
         return true;
@@ -88,8 +101,8 @@ public class Main {
 
     private static Matrix fixToFloorInteger(Matrix x) {
         Matrix newMatrix = new Matrix(x.getArray());
-        for (int i = 0; i < x.getColumnDimension(); ++i) {
-            newMatrix.set(0, i, Math.floor(x.get(0, i)));
+        for (int i = 0; i < x.getRowDimension(); ++i) {
+            newMatrix.set(i, 0, Math.floor(x.get(i, 0)));
         }
 
         return newMatrix;
@@ -104,6 +117,8 @@ public class Main {
 
         list.sort(comparator);
 
+        B = B.transpose();
+
         for (int i = 0; i < list.size(); ++i) {
             int key = list.get(i).key;
 
@@ -113,6 +128,9 @@ public class Main {
                 swapColumns(B, i, key);
             }
         }
+
+        B = B.transpose();
+
     }
 
     private static void swapColumns(Matrix m, int i1, int i2) {
