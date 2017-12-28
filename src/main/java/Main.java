@@ -3,6 +3,7 @@ import Jama.Matrix;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Vector;
 
 public class Main {
     public static void main(String[] args) {
@@ -23,35 +24,58 @@ public class Main {
             return;
         }
 
+        int n = continuousMinimum.getColumnDimension();
+
         Matrix x = continuousMinimum;
 
-        double lowerBound = Evaluator.evaluateExpression(continuousMinimum, A, B);
-        double upperBound = Evaluator.evaluateExpression(fixToFloorInteger(continuousMinimum), A, B);
-        int d = 0;
-        final int n = continuousMinimum.getColumnDimension();
-        double value = 0.0;
-        Matrix min;
+        Matrix minimum;
 
+        Vector<Integer> numberOfCalls = new Vector<>(n);
 
-        // warunek wyjscia?
-        while (true) {
-            Matrix fixedSolution = Evaluator.fixToCeilInteger(x, d); // to powinno sie dynamicznie zmieniac a nie sam ceil tzn ceil, floor, ceil+1, floor+1 etc.
+        double lowerBound = Double.MAX_VALUE;
 
-            double fixedSolutionValue = Evaluator.evaluateExpression(fixedSolution, A, B);
+        for (int d = 0; d < n; ++d){
+            fixAtPosition(x, d, numberOfCalls);
 
-            if (fixedSolutionValue < upperBound) {
-                // rozwijamy tzn?
-                // przechodzimy do drugiej wspolrzednej etc.
-                if (d < n)
-                    ++d;
+            double currentLowerBound = Evaluator.evaluateExpression(x, A, B);
 
-                x = fixedSolution;
-            } else {
-                // to nie rozwijamy dalej tego wezla
-                if (d > 0)
-                    --d;
+            //lowerBound = lowerBound < currentLowerBound ? lowerBound : currentLowerBound;
+
+            if (lowerBound <= currentLowerBound){
+                // fuck go back
+                 --d;
+
+                 //
+
+                 --d;
             }
+            else {
+                lowerBound = currentLowerBound;
+            }
+
+            // fix x at d
+            // calc lower bound by calculating f(so far fixed x)
+            // check if lowerbound > current minimal lower bound
+            // yes -> dont go that way - step back one step and calc one more point (3 points)
+            //                         - go to the point which has lowest lower bound
+            // no -> go that way, ++d repeat algorithm
+
+
+
+
         }
+
+        minimum = x;
+    }
+
+    private static void fixAtPosition(Matrix m, int d, Vector<Integer> calls){
+        int numberOfCalls = calls.get(d);
+
+        // d % 2 == 0 => -
+        // else +
+
+        // numberOfCalls
+
     }
 
     private static boolean isSolutionInteger(Matrix m) {
