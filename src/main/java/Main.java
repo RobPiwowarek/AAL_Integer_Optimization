@@ -30,9 +30,7 @@ public class Main {
 
         int n = continuousMinimum.getRowDimension();
 
-        Matrix x = continuousMinimum;
-
-        Matrix minimum;
+        
 
         int numberOfCalls[] = new int[n];
 
@@ -42,21 +40,29 @@ public class Main {
         continuousMinimum.print(3, 6);
         System.out.println(n);
 
+        
+        
         boolean stop = false;
-
-        ArrayList<Matrix> values = new ArrayList<>();
+        Matrix x = continuousMinimum;
+        Matrix minimum;
+        ArrayList<Matrix> points = new ArrayList<>();
 
         for (int d = 0; d < n; ++d){
             while (!stop){
-                Matrix m = fixAtPosition(continuousMinimum, d, numberOfCalls);
+                Matrix m = fixAtPosition(x, d, numberOfCalls, continuousMinimum);
                 if (Evaluator.evaluateExpression(m, A, B) > lowerBound)
                     stop = true;
 
-                values.add(m);
+                points.add(m);
             }
 
-            x = chooseMinimum(values, A, B);
-            values.clear();
+            x = chooseMinimum(points, A, B);
+
+            // todo: cofanie
+
+            
+
+            points.clear();
             stop = false;
         }
 
@@ -65,14 +71,14 @@ public class Main {
         minimum.print(3, 6);
  }
 
-    private static Matrix chooseMinimum(ArrayList<Matrix> values, Matrix A, Matrix B){
+    private static Matrix chooseMinimum(ArrayList<Matrix> points, Matrix A, Matrix B){
         Matrix minMat;
         double currentMin;
 
-        minMat = values.get(0);
+        minMat = points.get(0);
         currentMin = Evaluator.evaluateExpression(minMat, A, B);
 
-        for (Matrix x: values) {
+        for (Matrix x: points) {
             double val = Evaluator.evaluateExpression(x, A, B);
 
             if (val < currentMin){
@@ -84,7 +90,7 @@ public class Main {
         return minMat;
     }
 
-    private static Matrix fixAtPosition(Matrix m, int d, int[] calls){
+    private static Matrix fixAtPosition(Matrix m, int d, int[] calls, Matrix continuousMinimum){
         int numberOfCalls = calls[d];
 
         Matrix x = m;
@@ -92,10 +98,10 @@ public class Main {
         double howmuchtoadd = Math.floor((numberOfCalls) / 2);
 
         if (calls[d] % 2 != 0){
-            x.set(d, 0, Math.floor(m.get(d, 0)) + howmuchtoadd);
+            x.set(d, 0, Math.floor(continuousMinimum.get(d, 0)) + howmuchtoadd);
         }
         else
-            x.set(d, 0, Math.ceil(m.get(d, 0)) - howmuchtoadd);
+            x.set(d, 0, Math.ceil(continuousMinimum.get(d, 0)) - howmuchtoadd);
 
         ++calls[d];
 
