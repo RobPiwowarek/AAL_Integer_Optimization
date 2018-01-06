@@ -1,5 +1,6 @@
 import Jama.Matrix;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,43 +31,72 @@ public class Main {
 
         int n = continuousMinimum.getRowDimension();
 
-        
-
         int numberOfCalls[] = new int[n];
 
-        double lowerBound = Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B);
+        double upperBound = Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B);
 
-        A.print(3, 6);
-        continuousMinimum.print(3, 6);
-        System.out.println(n);
-
-        
-        
-        boolean stop = false;
         Matrix x = continuousMinimum;
-        Matrix minimum;
-        ArrayList<Matrix> points = new ArrayList<>();
+
+        ArrayList<Matrix> fixedPoints = new ArrayList<>();
+
+        Vector<ArrayList<Matrix>> points = new Vector<>(n);
+
+        for (int i = 0; i < n; ++i)
+            points.add(new ArrayList<>());
 
         for (int d = 0; d < n; ++d){
-            while (!stop){
-                Matrix m = fixAtPosition(x, d, numberOfCalls, continuousMinimum);
-                if (Evaluator.evaluateExpression(m, A, B) > lowerBound)
-                    stop = true;
+            if (numberOfCalls[d] == 0) {
+                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
+                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
+                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
+            }
+            else
+                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
 
-                points.add(m);
+            x = chooseMinimum(points.get(d), A, B);
+
+            double val = Evaluator.evaluateExpression(x, A, B);
+
+//            System.out.println("o: " + points.get(0).size());
+//            System.out.println("1: " + points.get(1).size());
+//            x.print(3,6);
+//            System.out.println("val: " + val);
+
+            if (val > upperBound){
+                points.get(d).clear();
+
+                int size = 0;
+                for (int i = 0; i < n; ++i)
+                    size += points.get(i).size();
+
+                if (size == 0)
+                    break;
+
+                if (d == 0)
+                    d = -1;
+                else
+                    d = d-2;
+
+                continue;
             }
 
-            x = chooseMinimum(points, A, B);
+            if (isSolutionInteger(x)) {
+                points.get(d).remove(x);
 
-            // todo: cofanie
+                if (val <= upperBound) {
+                    upperBound = val;
+                    fixedPoints.add(x);
+                }
 
-            
+                --d;
+            }
 
-            points.clear();
-            stop = false;
+            points.get(d).remove(x);
         }
 
-        minimum = x;
+        System.out.println("end");
+
+        Matrix minimum = chooseMinimum(fixedPoints, A, B);
 
         minimum.print(3, 6);
  }
@@ -93,7 +123,7 @@ public class Main {
     private static Matrix fixAtPosition(Matrix m, int d, int[] calls, Matrix continuousMinimum){
         int numberOfCalls = calls[d];
 
-        Matrix x = m;
+        Matrix x = Matrix.constructWithCopy(m.getArray());
 
         double howmuchtoadd = Math.floor((numberOfCalls) / 2);
 
@@ -109,15 +139,18 @@ public class Main {
     }
 
     private static boolean isSolutionInteger(Matrix m) {
+        double[][] temp = m.getArray();
+
         for (int i = 0; i < m.getRowDimension(); ++i) {
-            if (m.getArray()[i][0] != Math.round(m.getArray()[i][0]))
+            if (temp[i][0] != Math.round(temp[i][0]))
                 return false;
         }
         return true;
     }
 
     private static Matrix fixEntireMatrixToClosestInteger(Matrix x) {
-        Matrix newMatrix = new Matrix(x.getArray());
+        Matrix newMatrix = Matrix.constructWithCopy(x.getArray());
+
         for (int i = 0; i < x.getRowDimension(); ++i) {
             newMatrix.set(i, 0, Math.round(x.get(i, 0)));
         }

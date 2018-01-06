@@ -32,16 +32,12 @@ public class MatrixReader {
             System.exit(1);
         }
 
-        System.out.println("x: " + x + " y: " + y);
-
         readArray = new double[x][y];
 
         try {
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
-
                 int columnsIndex = 0;
 
                 StringTokenizer stringTokenizer = new StringTokenizer(line, " ");
@@ -49,14 +45,11 @@ public class MatrixReader {
                 while (stringTokenizer.hasMoreElements()) {
                     String token = stringTokenizer.nextToken();
                     Double val = Double.parseDouble(token);
-                    System.out.println("while: " + rowsIndex + " " + columnsIndex);
                     readArray[rowsIndex][columnsIndex++] = val;
                 }
 
                 ++rowsIndex;
             }
-
-            System.out.println("Done");
 
         } catch (IOException e) {
             e.printStackTrace();
