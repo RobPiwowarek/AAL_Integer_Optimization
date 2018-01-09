@@ -24,7 +24,7 @@ import java.io.IOException;
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
  * @author Eric Eaton (EricEaton@umbc.edu) <br>
- *         University of Maryland Baltimore County
+ * University of Maryland Baltimore County
  * @version 0.1
  */
 public class JamaUtils {
@@ -359,7 +359,7 @@ public class JamaUtils {
      *
      * @param m
      * @return <code>m.transpose()</code> if m is a row vector,
-     *         <code>m</code> if m is a column vector.
+     * <code>m</code> if m is a column vector.
      * @throws IllegalArgumentException if m is not a row vector or a column vector.
      */
     public static Matrix makeColumnVector(Matrix m) {
@@ -378,7 +378,7 @@ public class JamaUtils {
      *
      * @param m
      * @return <code>m.transpose()</code> if m is a column vector,
-     *         <code>m</code> if m is a row vector.
+     * <code>m</code> if m is a row vector.
      * @throws IllegalArgumentException if m is not a row vector or a column vector.
      */
     public static Matrix makeRowVector(Matrix m) {
@@ -410,45 +410,6 @@ public class JamaUtils {
         return true;
     }
 
-
-    /**
-     * Specifies a simple mathematical function.
-     */
-    public enum Function {
-        MAX, MIN, MEAN;
-
-        /**
-         * Apply the function to the two values.
-         */
-        public double applyFunction(int v1, int v2) {
-            switch (this) {
-                case MAX:
-                    return Math.max(v1, v2);
-                case MIN:
-                    return Math.min(v1, v2);
-                case MEAN:
-                    return (v1 + v2) / 2.0;
-            }
-            throw new IllegalStateException("Unknown Function.");
-        }
-
-        /**
-         * Apply the function to the two values.
-         */
-        public double applyFunction(double v1, double v2) {
-            switch (this) {
-                case MAX:
-                    return Math.max(v1, v2);
-                case MIN:
-                    return Math.min(v1, v2);
-                case MEAN:
-                    return (v1 + v2) / 2.0;
-            }
-            throw new IllegalStateException("Unknown Function.");
-        }
-    }
-
-
     /**
      * Makes a matrix symmetric by applying a function to symmetric elements.
      *
@@ -469,7 +430,6 @@ public class JamaUtils {
         }
 
     }
-
 
     /**
      * Normalizes a matrix to make the elements sum to 1.
@@ -608,7 +568,6 @@ public class JamaUtils {
         return minValue;
     }
 
-
     /**
      * Make a matrix of ones.
      *
@@ -619,7 +578,6 @@ public class JamaUtils {
     public static Matrix ones(int numRows, int numCols) {
         return new Matrix(numRows, numCols, 1);
     }
-
 
     /**
      * Performs least squares regression using Tikhonov regularization.
@@ -688,7 +646,6 @@ public class JamaUtils {
         double rmse = Math.sqrt(JamaUtils.sum(difference.transpose().times(difference)));
         return rmse;
     }
-
 
     public static Matrix loadSparseMatrix(File file) {
         FileReader fileReader = null;
@@ -759,6 +716,44 @@ public class JamaUtils {
         }
 
         return null;
+    }
+
+
+    /**
+     * Specifies a simple mathematical function.
+     */
+    public enum Function {
+        MAX, MIN, MEAN;
+
+        /**
+         * Apply the function to the two values.
+         */
+        public double applyFunction(int v1, int v2) {
+            switch (this) {
+                case MAX:
+                    return Math.max(v1, v2);
+                case MIN:
+                    return Math.min(v1, v2);
+                case MEAN:
+                    return (v1 + v2) / 2.0;
+            }
+            throw new IllegalStateException("Unknown Function.");
+        }
+
+        /**
+         * Apply the function to the two values.
+         */
+        public double applyFunction(double v1, double v2) {
+            switch (this) {
+                case MAX:
+                    return Math.max(v1, v2);
+                case MIN:
+                    return Math.min(v1, v2);
+                case MEAN:
+                    return (v1 + v2) / 2.0;
+            }
+            throw new IllegalStateException("Unknown Function.");
+        }
     }
 
 }
