@@ -1,13 +1,15 @@
+package Generator;
+
 import Jama.Matrix;
 
 import java.util.Random;
 
-class Generator {
-    Generator() {
+public class Generator {
+    public Generator() {
 
     }
 
-    Matrix generatePositiveDefiniteMatrix(int dim) {
+    public Matrix generatePositiveDefiniteMatrix(int dim) {
         double array[][] = new double[dim][dim];
 
         Random rand = new Random();
@@ -22,7 +24,7 @@ class Generator {
         return old.times(matrix.transpose());
     }
 
-    Matrix generateVectorB(int length) {
+    public Matrix generateVectorB(int length) {
         double array[][] = new double[length][1];
 
         Random rand = new Random();

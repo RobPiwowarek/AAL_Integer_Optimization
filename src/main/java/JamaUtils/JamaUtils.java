@@ -1,3 +1,5 @@
+package JamaUtils;
+
 import Jama.Matrix;
 
 import java.io.BufferedReader;

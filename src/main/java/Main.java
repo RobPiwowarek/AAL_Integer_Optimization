@@ -1,4 +1,7 @@
+import Algorithm.Optimizer;
+import Generator.Generator;
 import Jama.Matrix;
+import Reader.MatrixReader;
 
 import java.util.Scanner;
 
@@ -35,7 +38,8 @@ public class Main {
                     Matrix A = MatrixReader.readMatrixFromFile("A.txt");
                     Matrix B = MatrixReader.readMatrixFromFile("B.txt");
 
-                    optimizer.optimize(A, B);
+                    //optimizer.optimize(A, B);
+                    System.out.println("Time: " + optimizer.timedOptimize(1, A, B));
                     break;
                 case 2:
                     System.out.print("Enter matrix dimensions: ");
@@ -55,7 +59,7 @@ public class Main {
                     Matrix A3 = generator.generatePositiveDefiniteMatrix(dim);
                     Matrix B3 = generator.generateVectorB(dim);
 
-                    optimizer.timedOptimize(iterations, A3, B3);
+                    System.out.println("Time: " + optimizer.timedOptimize(iterations, A3, B3));
                     break;
                 case 4:
                     long[] times = new long[10];
@@ -63,15 +67,16 @@ public class Main {
                     iterations = scanner.nextInt();
 
                     for (int i = 0; i < 10; ++i) {
-                        Matrix A4 = generator.generatePositiveDefiniteMatrix(i + 2);
-                        Matrix B4 = generator.generateVectorB(i + 2);
+                        Matrix A4 = generator.generatePositiveDefiniteMatrix(i+5);
+                        Matrix B4 = generator.generateVectorB(i+5);
 
                         times[i] = optimizer.timedOptimize(iterations, A4, B4);
+                        System.gc();
                     }
 
                     System.out.println("Times table:");
                     for (int i = 0; i < 10; ++i) {
-                        System.out.println("[" + (i + 2) + "] ------ time: " + times[i]);
+                        System.out.println("[" + (i + 5) + "] ------ time: " + times[i]);
                     }
                     break;
                 case 5:
