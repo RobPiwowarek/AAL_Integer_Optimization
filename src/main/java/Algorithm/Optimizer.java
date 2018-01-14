@@ -13,104 +13,129 @@ public class Optimizer {
     }
 
     public void optimize(Matrix A, Matrix B) {
-//        System.out.println("A:");
-//        A.print(3, 6);
-//        System.out.println("B:");
-//        B.print(3, 6);
-
         if (!JamaUtils.isSymmetric(A)) {
             JamaUtils.makeMatrixSymmetric(A, JamaUtils.Function.MEAN);
         }
 
-        ArrayList<Tuple> mapping = sortBySecondDerivative(A, B);
+        sortBySecondDerivative(A, B);
 
-        Matrix continuousMinimum = A.inverse().times(B).times(-0.5);
-        B = B.transpose();
-
-        System.out.println("continuousMinimum:");
-        //continuousMinimum.print(3, 6);
-
-        System.out.println("value: " + Evaluator.evaluateExpression(continuousMinimum, A, B));
-
-        if (isSolutionInteger(continuousMinimum)) {
-            continuousMinimum.print(continuousMinimum.getColumnDimension(), 5);
-            return;
-        }
-
-        int n = continuousMinimum.getRowDimension();
+        int n = A.getRowDimension();
 
         int numberOfCalls[] = new int[n];
 
         double upperBound = Double.MAX_VALUE;//Algorithm.Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B);
 
-        Matrix x = continuousMinimum;
-
         ArrayList<Matrix> fixedPoints = new ArrayList<>();
 
         Vector<ArrayList<Matrix>> points = new Vector<>(n);
 
-        for (int i = 0; i < n; ++i)
+        Vector<Matrix> Bs = new Vector<>(n);
+        Bs.add(B);
+
+        Vector<Double> Cs = new Vector<>(n);
+        Cs.add(0.0);
+
+        for (int i = 0; i < n; ++i) {
             points.add(new ArrayList<>());
-
-        ArrayList<Matrix> minors = new ArrayList<>(n);
-
-        for (int d = 0; d < n; ++d) {
-            if (numberOfCalls[d] == 0) {
-                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
-                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
-                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
-            } else
-                points.get(d).add(fixAtPosition(x, d, numberOfCalls, continuousMinimum));
-
-            x = chooseMinimum(points.get(d), A, B);
-
-            double val = Evaluator.evaluateExpression(x, A, B);
-
-            //System.out.println("d: " + d + " val: " + val + " ");
-            // todo: znalezc minimum dla pod problemu tzn. rzeczywistoliczbowe "pomijajac" juz calkowitoliczbowe
-
-            if (val > upperBound) {
-                points.get(d).clear();
-
-                int size = 0;
-                for (int i = 0; i < n; ++i)
-                    size += points.get(i).size();
-
-                if (size == 0)
-                    break;
-
-                if (d == 0)
-                    d = -1;
-                else
-                    d = d - 2;
-
-                continue;
-            }
-
-            if (isSolutionInteger(x)) {
-                points.get(d).remove(x);
-
-                if (val <= upperBound) {
-                    upperBound = val;
-                    fixedPoints.add(x);
-                }
-
-                --d;
-                continue;
-            }
-
-            points.get(d).remove(x);
         }
 
-        System.out.println("closest-fix value: " + Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B));
+        ArrayList<Matrix> minors = new ArrayList<>(n);
+        minors.add(A);
+        calculateMinors(minors, A);
+
+        Matrix a = A;
+        Matrix b = B;
+        double c = 0.0;
+        Matrix savedX = null;
+
+        System.out.println("A:");
+        a.print(3,6);
+        System.out.println("B:");
+        b.print(3, 6);
+
+        for (int d = 0; d < n; ++d){
+            Matrix continuousMinimum = a.inverse().times(b).times(-0.5);
+
+            if (savedX == null) {
+                savedX = Matrix.constructWithCopy(continuousMinimum.getArray());
+                System.out.println("Continious minimum: ");
+                continuousMinimum.print(3, 6);
+                System.out.println("Value: " + Evaluator.evaluateExpression(continuousMinimum, A, B, c));
+                System.out.println("Closest int val: " + Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B, 0.0));
+            }
+
+            // fixing
+            if (numberOfCalls[d] == 0) {
+                points.get(d).add(fix(continuousMinimum, numberOfCalls));
+                points.get(d).add(fix(continuousMinimum, numberOfCalls));
+                points.get(d).add(fix(continuousMinimum, numberOfCalls));
+            }
+            else {
+                points.get(d).add(fix(continuousMinimum, numberOfCalls));
+            }
+            // choose branching point
+            Matrix branch = chooseMinimum(points.get(d), a, b, c);
+
+            double value = Evaluator.evaluateExpression(branch, a, b, c);
+//            System.out.println("branch: ");
+//            branch.print(3, 6);
+//            System.out.println("Value: " + value);
+
+            // conditions
+            if (value > upperBound){
+                points.get(d).clear(); //
+
+                Bs.remove(d);
+                Cs.remove(d);
+
+                // we went back and there is no more points we could branch on
+                if (d == 0)
+                    break;
+
+                a = minors.get(d-1);
+                b = Bs.get(d-1);
+                c = Cs.get(d-1);
+
+                d -= 2; // go back
+            }
+            else {
+                savedX.set(d, 0, branch.get(0, 0));
+
+                if (d != n-1)
+                    mergeReducedXWithX(savedX, getReducedX(branch), d);
+
+                double debugval = Evaluator.evaluateExpression(savedX, A, B, 0.0);
+//                System.out.println("saved: ");
+//                savedX.print(3, 6);
+//                System.out.println("Debugval: " + debugval);
+
+                points.get(d).remove(branch);
+
+                if (isSolutionInteger(savedX)){
+                    if (value < upperBound) {
+                        upperBound = value;
+                        fixedPoints.add(Matrix.constructWithCopy(savedX.getArray()));
+                    }
+                    --d;
+                }
+                else {
+                    c = getConstant(a, b, branch);
+                    b = getMinorMatrixB(b, a, branch);
+                    a = minors.get(d+1);
+
+                    Bs.add(b);
+                    Cs.add(c);
+                }
+            }
+        }
 
         System.out.println("end");
 
-        Matrix minimum = chooseMinimum(fixedPoints, A, B);
+        Matrix minimum = chooseMinimum(fixedPoints, A, B, 0.0);
 
-        System.out.println(Evaluator.evaluateExpression(minimum, A, B));
+        System.out.println(Evaluator.evaluateExpression(minimum, A, B, 0.0));
 
-        //minimum.print(3, 6);
+        minimum.print(3, 6);
     }
 
     public long timedOptimize(int iterations, Matrix A, Matrix B) {
@@ -130,15 +155,15 @@ public class Optimizer {
         return (end - start) / 1000000;
     }
 
-    private Matrix chooseMinimum(ArrayList<Matrix> points, Matrix A, Matrix B) {
+    private Matrix chooseMinimum(ArrayList<Matrix> points, Matrix A, Matrix B, double c) {
         Matrix minMat;
         double currentMin;
 
         minMat = points.get(0);
-        currentMin = Evaluator.evaluateExpression(minMat, A, B);
+        currentMin = Evaluator.evaluateExpression(minMat, A, B, c);
 
         for (Matrix x : points) {
-            double val = Evaluator.evaluateExpression(x, A, B);
+            double val = Evaluator.evaluateExpression(x, A, B, c);
 
             if (val < currentMin) {
                 currentMin = val;
@@ -149,31 +174,30 @@ public class Optimizer {
         return minMat;
     }
 
-    private Matrix fixAtPosition(Matrix m, int d, int[] calls, Matrix continuousMinimum) {
-        int numberOfCalls = calls[d];
+    private Matrix fix(Matrix m, int[] calls) {
+        int index = calls.length - m.getRowDimension();
+        int numberOfCalls = calls[index];
 
         Matrix x = Matrix.constructWithCopy(m.getArray());
 
         double diff = Math.floor((numberOfCalls) / 2);
 
-        double val = continuousMinimum.get(d, 0);
+        double val = m.get(0,0);
 
         if (Math.round(val) == Math.floor(val)){
-            if (calls[d] % 2 != 0) {
-                x.set(d, 0, Math.floor(continuousMinimum.get(d, 0)) - diff);
+            if (calls[index] % 2 != 0) {
+                x.set(0, 0, Math.floor(val) - diff);
             } else
-                x.set(d, 0, Math.ceil(continuousMinimum.get(d, 0)) + diff);
-
+                x.set(0, 0, Math.ceil(val) + diff);
         }
         else {
-            if (calls[d] % 2 == 0) {
-                x.set(d, 0, Math.floor(continuousMinimum.get(d, 0)) - diff);
+            if (calls[index] % 2 == 0) {
+                x.set(0, 0, Math.floor(val) - diff);
             } else
-                x.set(d, 0, Math.ceil(continuousMinimum.get(d, 0)) + diff);
-
+                x.set(0, 0, Math.ceil(val) + diff);
         }
 
-        ++calls[d];
+        ++calls[index];
 
         return x;
     }
@@ -198,31 +222,23 @@ public class Optimizer {
         return newMatrix;
     }
 
-    private ArrayList<Tuple> sortBySecondDerivative(Matrix A) {
-        ArrayList<Tuple> list = new ArrayList<>();
+    private Matrix getReducedX(Matrix x){
+        double array[][] = new double[x.getRowDimension()-1][1];
 
-        for (int i = 0; i < A.getColumnDimension(); ++i) {
-            list.add(new Tuple(i, A.get(i, i)));
+        for (int i = 0; i < x.getRowDimension()-1; ++i){
+            array[i][0] = x.getArray()[i+1][0];
         }
 
-        list.sort(Tuple.descending);
-
-        return list;
+        return new Matrix(array);
     }
 
-    private void calculateMinors(ArrayList<Matrix> minorsA, ArrayList<Matrix> minorsB, Matrix A, Matrix B, Matrix x){
+    private void calculateMinors(ArrayList<Matrix> minorsA, Matrix A){
         Matrix a = A;
-        Matrix b = B;
 
-        for (int i = 0; i < A.getRowDimension(); ++i){
-            Matrix tmpA = getMinorMatrix(a);
-            Matrix tmpB = getMinorMatrixB(b, a, x);
-            
-            a = tmpA;
-            b = tmpB;
+        for (int i = 0; i < A.getRowDimension()-1; ++i){
+            a = getMinorMatrix(a);
 
             minorsA.add(a);
-            minorsB.add(b);
         }
     }
 
@@ -236,7 +252,7 @@ public class Optimizer {
 
         for (int i = 1; i < y+1; ++i){
             for (int j = 1; j < x+1; ++j){
-                array[i][j] = originalArray[i][j];
+                array[i-1][j-1] = originalArray[i][j];
             }
         }
 
@@ -244,10 +260,18 @@ public class Optimizer {
     }
 
     private Matrix getMinorMatrixB(Matrix B, Matrix A, Matrix x){
-        Matrix b = new Matrix(B.getRowDimension()-1, 1);
+        Matrix b = new Matrix(new double[B.getRowDimension()-1][1]);
 
         for (int i = 0; i < x.getRowDimension()-1; ++i){
-            double val = A.get(i+1, 0)*x.get(0,0) + A.get(0, i+1)*x.get(0,0) + B.get(i, 0);
+//            System.out.println("A(i+1, 0): " + A.get(i+1, 0));
+//            System.out.println("A(0, i+1): " + A.get(0, i+1));
+//            System.out.println("B(i+1, 0): " + B.get(i+1, 0));
+//            System.out.println("X: ");
+//            x.print(3, 6);
+
+            double val = A.get(i+1, 0)*x.get(0,0) + A.get(0, i+1)*x.get(0,0) + B.get(i+1, 0);
+
+//            System.out.println("sum: " + val);
             b.set(i, 0, val);
         }
 
@@ -255,7 +279,13 @@ public class Optimizer {
     }
 
     private double getConstant(Matrix A, Matrix B, Matrix x){
-        return A.get(0, 0) * Math.sqrt(x.get(0,0)) + B.get(0, 0)*x.get(0,0);
+        return A.get(0, 0) * Math.pow(x.get(0,0), 2) + B.get(0, 0)*x.get(0,0);
+    }
+
+    private void mergeReducedXWithX(Matrix x, Matrix reduced, int index){
+        for (int i = 0; i < reduced.getRowDimension(); ++i){
+            x.set(i+index+1, 0, reduced.get(i, 0));
+        }
     }
 
     private ArrayList<Tuple> sortBySecondDerivative(Matrix A, Matrix B){
@@ -291,4 +321,5 @@ public class Optimizer {
         JamaUtils.setrow(m, i, JamaUtils.getrow(m, j));
         JamaUtils.setrow(m, j, tempCol);
     }
+
 }
