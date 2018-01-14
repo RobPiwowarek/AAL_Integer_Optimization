@@ -3,7 +3,6 @@ package Algorithm;
 import Jama.Matrix;
 import JamaUtils.JamaUtils;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Vector;
 
 public class Optimizer {
@@ -49,11 +48,11 @@ public class Optimizer {
         Matrix savedX = null;
 
         System.out.println("A:");
-        a.print(3,6);
+        a.print(3, 6);
         System.out.println("B:");
         b.print(3, 6);
 
-        for (int d = 0; d < n; ++d){
+        for (int d = 0; d < n; ++d) {
             Matrix continuousMinimum = a.inverse().times(b).times(-0.5);
 
             if (savedX == null) {
@@ -69,20 +68,16 @@ public class Optimizer {
                 points.get(d).add(fix(continuousMinimum, numberOfCalls));
                 points.get(d).add(fix(continuousMinimum, numberOfCalls));
                 points.get(d).add(fix(continuousMinimum, numberOfCalls));
-            }
-            else {
+            } else {
                 points.get(d).add(fix(continuousMinimum, numberOfCalls));
             }
             // choose branching point
             Matrix branch = chooseMinimum(points.get(d), a, b, c);
 
             double value = Evaluator.evaluateExpression(branch, a, b, c);
-//            System.out.println("branch: ");
-//            branch.print(3, 6);
-//            System.out.println("Value: " + value);
 
             // conditions
-            if (value > upperBound){
+            if (value > upperBound) {
                 points.get(d).clear(); //
 
                 Bs.remove(d);
@@ -92,36 +87,29 @@ public class Optimizer {
                 if (d == 0)
                     break;
 
-                a = minors.get(d-1);
-                b = Bs.get(d-1);
-                c = Cs.get(d-1);
+                a = minors.get(d - 1);
+                b = Bs.get(d - 1);
+                c = Cs.get(d - 1);
 
                 d -= 2; // go back
-            }
-            else {
+            } else {
                 savedX.set(d, 0, branch.get(0, 0));
 
-                if (d != n-1)
+                if (d != n - 1)
                     mergeReducedXWithX(savedX, getReducedX(branch), d);
-
-                double debugval = Evaluator.evaluateExpression(savedX, A, B, 0.0);
-//                System.out.println("saved: ");
-//                savedX.print(3, 6);
-//                System.out.println("Debugval: " + debugval);
 
                 points.get(d).remove(branch);
 
-                if (isSolutionInteger(savedX)){
+                if (isSolutionInteger(savedX)) {
                     if (value < upperBound) {
                         upperBound = value;
                         fixedPoints.add(Matrix.constructWithCopy(savedX.getArray()));
                     }
                     --d;
-                }
-                else {
+                } else {
                     c = getConstant(a, b, branch);
                     b = getMinorMatrixB(b, a, branch);
-                    a = minors.get(d+1);
+                    a = minors.get(d + 1);
 
                     Bs.add(b);
                     Cs.add(c);
@@ -182,15 +170,14 @@ public class Optimizer {
 
         double diff = Math.floor((numberOfCalls) / 2);
 
-        double val = m.get(0,0);
+        double val = m.get(0, 0);
 
-        if (Math.round(val) == Math.floor(val)){
+        if (Math.round(val) == Math.floor(val)) {
             if (calls[index] % 2 != 0) {
                 x.set(0, 0, Math.floor(val) - diff);
             } else
                 x.set(0, 0, Math.ceil(val) + diff);
-        }
-        else {
+        } else {
             if (calls[index] % 2 == 0) {
                 x.set(0, 0, Math.floor(val) - diff);
             } else
@@ -222,73 +209,65 @@ public class Optimizer {
         return newMatrix;
     }
 
-    private Matrix getReducedX(Matrix x){
-        double array[][] = new double[x.getRowDimension()-1][1];
+    private Matrix getReducedX(Matrix x) {
+        double array[][] = new double[x.getRowDimension() - 1][1];
 
-        for (int i = 0; i < x.getRowDimension()-1; ++i){
-            array[i][0] = x.getArray()[i+1][0];
+        for (int i = 0; i < x.getRowDimension() - 1; ++i) {
+            array[i][0] = x.getArray()[i + 1][0];
         }
 
         return new Matrix(array);
     }
 
-    private void calculateMinors(ArrayList<Matrix> minorsA, Matrix A){
+    private void calculateMinors(ArrayList<Matrix> minorsA, Matrix A) {
         Matrix a = A;
 
-        for (int i = 0; i < A.getRowDimension()-1; ++i){
+        for (int i = 0; i < A.getRowDimension() - 1; ++i) {
             a = getMinorMatrix(a);
 
             minorsA.add(a);
         }
     }
 
-    private Matrix getMinorMatrix(Matrix original){
-        int y = original.getRowDimension()-1;
-        int x = original.getColumnDimension()-1;
+    private Matrix getMinorMatrix(Matrix original) {
+        int y = original.getRowDimension() - 1;
+        int x = original.getColumnDimension() - 1;
 
         double array[][] = new double[y][x];
 
         double originalArray[][] = original.getArray();
 
-        for (int i = 1; i < y+1; ++i){
-            for (int j = 1; j < x+1; ++j){
-                array[i-1][j-1] = originalArray[i][j];
+        for (int i = 1; i < y + 1; ++i) {
+            for (int j = 1; j < x + 1; ++j) {
+                array[i - 1][j - 1] = originalArray[i][j];
             }
         }
 
         return new Matrix(array);
     }
 
-    private Matrix getMinorMatrixB(Matrix B, Matrix A, Matrix x){
-        Matrix b = new Matrix(new double[B.getRowDimension()-1][1]);
+    private Matrix getMinorMatrixB(Matrix B, Matrix A, Matrix x) {
+        Matrix b = new Matrix(new double[B.getRowDimension() - 1][1]);
 
-        for (int i = 0; i < x.getRowDimension()-1; ++i){
-//            System.out.println("A(i+1, 0): " + A.get(i+1, 0));
-//            System.out.println("A(0, i+1): " + A.get(0, i+1));
-//            System.out.println("B(i+1, 0): " + B.get(i+1, 0));
-//            System.out.println("X: ");
-//            x.print(3, 6);
-
-            double val = A.get(i+1, 0)*x.get(0,0) + A.get(0, i+1)*x.get(0,0) + B.get(i+1, 0);
-
-//            System.out.println("sum: " + val);
+        for (int i = 0; i < x.getRowDimension() - 1; ++i) {
+            double val = A.get(i + 1, 0) * x.get(0, 0) + A.get(0, i + 1) * x.get(0, 0) + B.get(i + 1, 0);
             b.set(i, 0, val);
         }
 
         return b;
     }
 
-    private double getConstant(Matrix A, Matrix B, Matrix x){
-        return A.get(0, 0) * Math.pow(x.get(0,0), 2) + B.get(0, 0)*x.get(0,0);
+    private double getConstant(Matrix A, Matrix B, Matrix x) {
+        return A.get(0, 0) * Math.pow(x.get(0, 0), 2) + B.get(0, 0) * x.get(0, 0);
     }
 
-    private void mergeReducedXWithX(Matrix x, Matrix reduced, int index){
-        for (int i = 0; i < reduced.getRowDimension(); ++i){
-            x.set(i+index+1, 0, reduced.get(i, 0));
+    private void mergeReducedXWithX(Matrix x, Matrix reduced, int index) {
+        for (int i = 0; i < reduced.getRowDimension(); ++i) {
+            x.set(i + index + 1, 0, reduced.get(i, 0));
         }
     }
 
-    private ArrayList<Tuple> sortBySecondDerivative(Matrix A, Matrix B){
+    private ArrayList<Tuple> sortBySecondDerivative(Matrix A, Matrix B) {
         ArrayList<Tuple> list = new ArrayList<>();
 
         for (int i = 0; i < A.getColumnDimension(); ++i) {
@@ -297,10 +276,10 @@ public class Optimizer {
 
         list.sort(Tuple.descending);
 
-        for (int i = 0; i < list.size(); ++i){
+        for (int i = 0; i < list.size(); ++i) {
             int key = list.get(i).key;
 
-            if (key != i){
+            if (key != i) {
                 swapColumns(A, i, key);
                 swapRows(A, i, key);
                 swapRows(B, i, key);
@@ -310,13 +289,13 @@ public class Optimizer {
         return list;
     }
 
-    private void swapColumns(Matrix m, int i, int j){
+    private void swapColumns(Matrix m, int i, int j) {
         Matrix tempCol = JamaUtils.getcol(m, i);
         JamaUtils.setcol(m, i, JamaUtils.getcol(m, j));
         JamaUtils.setcol(m, j, tempCol);
     }
 
-    private void swapRows(Matrix m, int i, int j){
+    private void swapRows(Matrix m, int i, int j) {
         Matrix tempCol = JamaUtils.getrow(m, i);
         JamaUtils.setrow(m, i, JamaUtils.getrow(m, j));
         JamaUtils.setrow(m, j, tempCol);
