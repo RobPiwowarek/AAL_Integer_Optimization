@@ -5,8 +5,10 @@ import Reader.MatrixReader;
 
 import java.util.Scanner;
 
+import static java.lang.Thread.sleep;
+
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         System.out.println("Integer Optimization");
         System.out.println("Created by Robert Piwowarek EITI ISI 5");
@@ -39,15 +41,13 @@ public class Main {
                     Matrix B = MatrixReader.readMatrixFromFile("B.txt");
 
                     //optimizer.optimize(A, B);
-                    System.out.println("Time: " + optimizer.timedOptimize(1, A, B));
+                    System.out.println("Time: " + optimizer.timedOptimize(0, A, B));
                     break;
                 case 2:
                     System.out.print("Enter matrix dimensions: ");
                     dim = scanner.nextInt();
-
-                    Matrix A2 = generator.generatePositiveDefiniteMatrixOfIntegers(dim);
-                    Matrix B2 = generator.generateVectorBOfIntegers(dim);
-
+                    Matrix A2 = generator.generatePositiveDefiniteMatrix(dim);
+                    Matrix B2 = generator.generateVectorB(dim);
                     optimizer.optimize(A2, B2);
                     break;
                 case 3:
@@ -62,21 +62,20 @@ public class Main {
                     System.out.println("Time: " + optimizer.timedOptimize(iterations, A3, B3));
                     break;
                 case 4:
-                    long[] times = new long[10];
+                    double[] times = new double[100];
                     System.out.println("Enter iterations");
                     iterations = scanner.nextInt();
 
-                    for (int i = 0; i < 10; ++i) {
-                        Matrix A4 = generator.generatePositiveDefiniteMatrix(i+5);
-                        Matrix B4 = generator.generateVectorB(i+5);
+                    for (int i = 2; i < 50; ++i) {
+                        Matrix A4 = generator.generatePositiveDefiniteMatrixOfIntegers(i);
+                        Matrix B4 = generator.generateVectorBOfIntegers(i);
 
                         times[i] = optimizer.timedOptimize(iterations, A4, B4);
-                        System.gc();
                     }
 
                     System.out.println("Times table:");
-                    for (int i = 0; i < 10; ++i) {
-                        System.out.println("[" + (i + 5) + "] ------ time: " + times[i]);
+                    for (int i = 2; i < 50; ++i) {
+                        System.out.println("[" + i + "] ------ time: " + times[i]);
                     }
                     break;
                 case 5:
