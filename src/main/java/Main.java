@@ -46,9 +46,10 @@ public class Main {
                 case 2:
                     System.out.print("Enter matrix dimensions: ");
                     dim = scanner.nextInt();
+                    for (int i = 0; i < 500; ++i){
                     Matrix A2 = generator.generatePositiveDefiniteMatrix(dim);
                     Matrix B2 = generator.generateVectorB(dim);
-                    optimizer.optimize(A2, B2);
+                    optimizer.optimize(A2, B2);}
                     break;
                 case 3:
                     System.out.print("Enter matrix dimensions: ");
@@ -67,8 +68,8 @@ public class Main {
                     iterations = scanner.nextInt();
 
                     for (int i = 2; i < 50; ++i) {
-                        Matrix A4 = generator.generatePositiveDefiniteMatrixOfIntegers(i);
-                        Matrix B4 = generator.generateVectorBOfIntegers(i);
+                        Matrix A4 = generator.generatePositiveDefiniteMatrix(i);
+                        Matrix B4 = generator.generateVectorB(i);
 
                         times[i] = optimizer.timedOptimize(iterations, A4, B4);
                     }
