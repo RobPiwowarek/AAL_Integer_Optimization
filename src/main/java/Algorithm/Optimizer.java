@@ -60,7 +60,7 @@ public class Optimizer {
             }
             // choose branching point
             Matrix branch;
-            if (d < n-1)
+            if (d < n - 1)
                 branch = chooseMinimum(points.get(d), a, b, c, d, minors);
             else
                 branch = chooseMinimum(points.get(d), a, b, c);
@@ -118,7 +118,7 @@ public class Optimizer {
         System.out.println("_Debug: " + _debugClosestIntVal);
         System.out.println("cont min: " + _debugMinimum);
 
-        if (val > _debugClosestIntVal){
+        if (val > _debugClosestIntVal) {
             System.out.println("FAILURE OF ALGORITHM");
             A.print(3, 6);
             B.print(3, 6);
@@ -277,7 +277,9 @@ public class Optimizer {
         double originalArray[][] = original.getArray();
 
         for (int i = 1; i < y + 1; ++i) {
-            System.arraycopy(originalArray[i], 1, array[i - 1], 0, x + 1 - 1);
+            for (int j = 1; j < x + 1; ++j) {
+                array[i - 1][j - 1] = originalArray[i][j];
+            }
         }
 
         return new Matrix(array);
@@ -295,12 +297,12 @@ public class Optimizer {
     }
 
     private double getConstant(Matrix A, Matrix B, Matrix x, double prevC) {
-        return 0.5*A.get(0, 0) * Math.pow(x.get(0, 0), 2) + B.get(0, 0) * x.get(0, 0) + prevC;
+        return 0.5 * A.get(0, 0) * Math.pow(x.get(0, 0), 2) + B.get(0, 0) * x.get(0, 0) + prevC;
     }
 
     private void mergeReducedXWithX(Matrix x, Matrix reduced, int index) {
-        for (int i = 0; i < reduced.getRowDimension(); ++i){
-            x.set(i+index, 0, reduced.get(i, 0));
+        for (int i = 0; i < reduced.getRowDimension(); ++i) {
+            x.set(i + index, 0, reduced.get(i, 0));
         }
 
     }

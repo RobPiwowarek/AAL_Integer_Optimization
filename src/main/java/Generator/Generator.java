@@ -37,7 +37,7 @@ public class Generator {
         return new Matrix(array);
     }
 
-    public Matrix generatePositiveDefiniteMatrixOfIntegers(int dim){
+    public Matrix generatePositiveDefiniteMatrixOfIntegers(int dim) {
         double array[][] = new double[dim][dim];
 
         Random rand = new Random();
