@@ -142,11 +142,7 @@ public class Optimizer {
         return minors;
     }
 
-    public double timedOptimize(int iterations, Matrix A, Matrix B) {
-        for (int i = 0; i < iterations; ++i) {
-            optimize(A, B);
-        }
-
+    public double timedOptimize(Matrix A, Matrix B) {
         long start = System.nanoTime();
         optimize(A, B);
         long end = System.nanoTime();
@@ -281,9 +277,7 @@ public class Optimizer {
         double originalArray[][] = original.getArray();
 
         for (int i = 1; i < y + 1; ++i) {
-            for (int j = 1; j < x + 1; ++j) {
-                array[i - 1][j - 1] = originalArray[i][j];
-            }
+            System.arraycopy(originalArray[i], 1, array[i - 1], 0, x + 1 - 1);
         }
 
         return new Matrix(array);
