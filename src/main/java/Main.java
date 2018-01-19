@@ -46,10 +46,9 @@ public class Main {
                 case 2:
                     System.out.print("Enter matrix dimensions: ");
                     dim = scanner.nextInt();
-                    for (int i = 0; i < 500; ++i){
                     Matrix A2 = generator.generatePositiveDefiniteMatrix(dim);
                     Matrix B2 = generator.generateVectorB(dim);
-                    optimizer.optimize(A2, B2);}
+                    optimizer.optimize(A2, B2);
                     break;
                 case 3:
                     System.out.print("Enter matrix dimensions: ");

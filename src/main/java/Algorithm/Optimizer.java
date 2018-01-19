@@ -17,7 +17,7 @@ public class Optimizer {
             JamaUtils.makeMatrixSymmetric(A, JamaUtils.Function.MEAN);
         }
 
-        //sortBySecondDerivative(A, B);
+        sortBySecondDerivative(A, B);
 
         int n = A.getRowDimension();
 
@@ -35,7 +35,7 @@ public class Optimizer {
         Matrix b = B;
         double c = 0.0;
         Matrix savedX = null;
-        double upperBound = Double.MAX_VALUE;//Algorithm.Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B);
+        double upperBound = Double.MAX_VALUE;
 
         double _debugClosestIntVal = 0.0;
         double _debugMinimum = 0.0;
@@ -45,11 +45,9 @@ public class Optimizer {
 
             if (savedX == null) {
                 savedX = Matrix.constructWithCopy(continuousMinimum.getArray());
-                System.out.println("Continious minimum: ");
-                continuousMinimum.print(3, 6);
                 _debugMinimum = Evaluator.evaluateExpression(continuousMinimum, A, B, c);
-                _debugClosestIntVal = Evaluator.evaluateExpression(fixEntireMatrixToClosestInteger(continuousMinimum), A, B, c);
-                System.out.println("Value: " + Evaluator.evaluateExpression(continuousMinimum, A, B, c));
+                Matrix _debugFixedMatrix = fixEntireMatrixToClosestInteger(continuousMinimum);
+                _debugClosestIntVal = Evaluator.evaluateExpression(_debugFixedMatrix, A, B, c);
             }
 
             // fixing
@@ -61,11 +59,13 @@ public class Optimizer {
                 points.get(d).add(fix(continuousMinimum, numberOfCalls, d));
             }
             // choose branching point
-            Matrix branch = chooseMinimum(points.get(d), a, b, c);
+            Matrix branch;
+            if (d < n-1)
+                branch = chooseMinimum(points.get(d), a, b, c, d, minors);
+            else
+                branch = chooseMinimum(points.get(d), a, b, c);
 
             double value = Evaluator.evaluateExpression(branch, a, b, c);
-            System.out.println("branch val: " + value);
-            System.out.println("lower bound val: " + Evaluator.evaluateExpression(continuousMinimum, a, b, c));
 
             // conditions
             if (value > upperBound) {
@@ -82,6 +82,7 @@ public class Optimizer {
                 b = Bs.get(d - 1);
                 c = Cs.get(d - 1);
                 savedX.set(d, 0, 1.5);
+                numberOfCalls[d] = 0;
 
                 d -= 2; // go back
             } else {
@@ -115,10 +116,10 @@ public class Optimizer {
 
         System.out.println("MINIMUM: " + val);
         System.out.println("_Debug: " + _debugClosestIntVal);
+        System.out.println("cont min: " + _debugMinimum);
 
         if (val > _debugClosestIntVal){
             System.out.println("FAILURE OF ALGORITHM");
-            System.out.println("cont min: " + _debugMinimum);
             A.print(3, 6);
             B.print(3, 6);
         }
@@ -151,6 +152,39 @@ public class Optimizer {
         long end = System.nanoTime();
 
         return (end - start) / 1000000.0;
+    }
+
+    private Matrix chooseMinimum(ArrayList<Matrix> points, Matrix A, Matrix B, double c, int d, ArrayList<Matrix> minors) {
+        Matrix minMat;
+        double currentMin;
+
+        minMat = points.get(0);
+
+        double tempC = getConstant(A, B, minMat, c);
+        Matrix tempB = getMinorMatrixB(B, A, minMat);
+        Matrix tempA = minors.get(d + 1);
+
+        Matrix _minMat = tempA.inverse().times(-1).times(tempB);
+
+        currentMin = Evaluator.evaluateExpression(_minMat, tempA, tempB, tempC);
+
+        for (Matrix x : points) {
+            double _tempC = getConstant(A, B, x, c);
+            Matrix _tempB = getMinorMatrixB(B, A, x);
+            Matrix _tempA = minors.get(d + 1);
+
+            Matrix _x = _tempA.inverse().times(-1).times(_tempB);
+
+            double val = Evaluator.evaluateExpression(_x, _tempA, _tempB, _tempC);
+
+            if (val <= currentMin) {
+                currentMin = val;
+                mergeReducedXWithX(x, _x, 1);
+                minMat = x;
+            }
+        }
+
+        return minMat;
     }
 
     private Matrix chooseMinimum(ArrayList<Matrix> points, Matrix A, Matrix B, double c) {
@@ -259,7 +293,7 @@ public class Optimizer {
         Matrix b = new Matrix(new double[B.getRowDimension() - 1][1]);
 
         for (int i = 0; i < x.getRowDimension() - 1; ++i) {
-            double val = 0.5*(A.get(i + 1, 0) * x.get(0, 0) + A.get(0, i + 1) * x.get(0, 0)) + B.get(i + 1, 0);
+            double val = A.get(i + 1, 0) * x.get(0, 0) + B.get(i + 1, 0);
             b.set(i, 0, val);
         }
 
@@ -271,9 +305,10 @@ public class Optimizer {
     }
 
     private void mergeReducedXWithX(Matrix x, Matrix reduced, int index) {
-        for (int i = index; i < x.getRowDimension(); ++i) {
-            x.set(i, 0, reduced.get(i-index, 0));
+        for (int i = 0; i < reduced.getRowDimension(); ++i){
+            x.set(i+index, 0, reduced.get(i, 0));
         }
+
     }
 
     private void sortBySecondDerivative(Matrix A, Matrix B) {
